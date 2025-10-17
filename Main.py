@@ -15,12 +15,13 @@ app = Flask(__name__)
 db = MongoStorage()
 print("[DB] ✅ MongoStorage جاهز.")
 
-# نحمّل كل handlers هنا (import lazily لتجنّب آثار الاستيراد غير المرغوب)
+# نحمّل كل handlers هنا
 try:
     import core.start_handler as start_handler
     import core.profile_handler as profile_handler
     import core.chat_handler as chat_handler
     import core.admin_handler as admin_handler
+    import core.search_handler as search_handler      # ✅ تمت الإضافة الجديدة
     import core.matchmaking as matchmaking
     import core.keyboards as keyboards
 except Exception as e:
@@ -32,17 +33,18 @@ try:
     profile_handler.register(bot)
     chat_handler.register(bot)
     admin_handler.register(bot)
+    search_handler.register(bot)                      # ✅ تسجيل البحث عن دردشة
     print("[REGISTER] ✅ تم تسجيل Handlers بنجاح.")
 except Exception as e:
     print(f"[REGISTER ERROR] {e}")
 
-# بدء مراقب المطابقة
+# بدء مراقب المطابقة (30 دقيقة)
 try:
     matchmaking.start_timeout_watcher(bot)
 except Exception as e:
     print(f"[MATCHMAKING WATCHER ERROR] {e}")
 
-# webhook endpoint (ثابت عند /<WEBHOOK_PATH>)
+# webhook endpoint
 @app.route("/", methods=["GET"])
 def home():
     return "Bot is running"
@@ -58,7 +60,6 @@ def webhook():
     return "", 200
 
 if __name__ == "__main__":
-    # ضبط webhook فقط (bot polling غير مستخدم)
     if USE_WEBHOOK and WEBHOOK_URL:
         try:
             bot.remove_webhook()
